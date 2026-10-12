@@ -1,6 +1,6 @@
 # Canon Production Printing — Process Explorer
 
-Standalone Coolify deployment package, including the corrected Canon header logo.
+Standalone Coolify deployment package, updated on 12 October 2026 following expert feedback on IBP supply planning and MTO confirmation.
 All HTML, CSS, JavaScript, fonts, logos, and icons are included in `dist/`.
 There is no build step, backend, database, API key, or required environment variable.
 The process simulator runs in the browser and has no live SAP connection.
@@ -42,7 +42,9 @@ The site was already compatible with static hosting. You can instead select **St
 
 - Open the home page and confirm both logos, fonts, and library icons load.
 - Switch between Order process, Demand lab, Compare, and Reference; refresh each section.
-- Change the fulfilment scenario, advance the process, and open a step explanation.
+- Change the fulfilment scenario and supply-planning design, advance the process, and open a step explanation.
+- In MTO, check the SBC request → PP/DS simulation → confirmation sequence.
+- In MTS/CTO, compare the IBP planned-order handover with the S/4-led PIR/MRP route.
 - For the Dockerfile deployment, open `/healthz`; it should return `ok` with HTTP 200.
 
 ## Run locally with Docker
@@ -65,7 +67,7 @@ docker inspect --format '{{.State.Health.Status}}' canon-process-explorer
 
 Edit the files in `dist/`, commit/push, and redeploy in Coolify. These are the editable source files; no compilation is required. The server asks browsers to revalidate cached files so updates use the current CSS, JavaScript, and logo assets.
 
-The package preserves the application files from source commit `7936289991950128e40876795396ae0526a62e14`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
+The package preserves the application files from source commit `fb5a912a8b02cab3cc8481780d07051a373126c3`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
 
 ## Documentation
 

@@ -1,6 +1,6 @@
 # Canon Production Printing — Process Explorer
 
-Standalone Coolify deployment package, updated on 12 October 2026 following expert feedback on IBP supply planning and MTO confirmation.
+Standalone Coolify deployment package, updated on 13 October 2026 using the v4 process reference and IBP expert feedback.
 All HTML, CSS, JavaScript, fonts, logos, and icons are included in `dist/`.
 There is no build step, backend, database, API key, or required environment variable.
 The process simulator runs in the browser and has no live SAP connection.
@@ -28,7 +28,7 @@ If this folder is inside a larger repository, set Base Directory to its path in 
 
 Use a Git-based application for this package. Coolify's **Dockerfile without Git** option has no source-file build context and cannot use this Dockerfile's `COPY` instructions by itself.
 
-Deploy at the root of a hostname. For example, the app's sections will be available at `/#journey`, `/#demand`, `/#compare`, and `/#reference`. HTTPS certificates and domain routing are handled by the Coolify proxy; the container itself serves HTTP on port 80.
+Deploy at the root of a hostname. For example, the app's sections will be available at `/#journey`, `/#demand`, `/#ibp`, `/#compare`, and `/#reference`. HTTPS certificates and domain routing are handled by the Coolify proxy; the container itself serves HTTP on port 80.
 
 ### Access
 
@@ -43,6 +43,9 @@ The site was already compatible with static hosting. You can instead select **St
 - Open the home page and confirm both logos, fonts, and library icons load.
 - Switch between Order process, Demand lab, Compare, and Reference; refresh each section.
 - Change the fulfilment scenario and supply-planning design, advance the process, and open a step explanation.
+- The opening view is Assemble-to-Order. Change module mix and extra stock, and follow the module receipts, assembly order, component issue and finished-printer receipt.
+- Enable Comparison underlay, select another scenario, inspect its faded nodes and use Swap models.
+- Open IBP planning for the volume/mix/buffer flow and supply-handover choices.
 - In MTO, check the SBC request → PP/DS simulation → confirmation sequence.
 - In MTS/CTO, compare the IBP planned-order handover with the S/4-led PIR/MRP route.
 - For the Dockerfile deployment, open `/healthz`; it should return `ok` with HTTP 200.
@@ -67,7 +70,7 @@ docker inspect --format '{{.State.Health.Status}}' canon-process-explorer
 
 Edit the files in `dist/`, commit/push, and redeploy in Coolify. These are the editable source files; no compilation is required. The server asks browsers to revalidate cached files so updates use the current CSS, JavaScript, and logo assets.
 
-The package preserves the application files from source commit `fb5a912a8b02cab3cc8481780d07051a373126c3`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
+The package preserves the application files from source commit `6200002abca334827a347d649c29e1f5c602db02`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
 
 ## Documentation
 

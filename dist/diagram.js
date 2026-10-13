@@ -1,89 +1,113 @@
-/* Application ownership and object hand-offs. Geometry stays separate from step content. */
-const DIAGRAM_LANES = [
+/* Fixed application lanes align the primary scenario with a comparison underlay. */
+const DIAGRAM_LANES=[
  ['PLM / Engineering','Product & manufacturing structure','FolderTree','engineering','external'],
  ['VC / AVC','Configuration model & selection','SlidersHorizontal','configuration','config'],
- ['SAP IBP · Demand','Forecast, mix & consumption','ChartNoAxesCombined','ibp-role','ibp'],
- ['SAP IBP · Supply','Network constraints & scenarios','Network','supply','ibp'],
+ ['SAP IBP · Demand','History, volume, mix & consumption','ChartNoAxesCombined','ibp-deep','ibp'],
+ ['SAP IBP · S&OP / Supply','Balance, scenarios & supply ownership','Network','ibp-deep','ibp'],
+ ['Inventory policy / IBP','Buffer position, size & uncertainty','PackageCheck','inventory','ibp'],
  ['S/4 · Sales (SD)','Customer order & commercial data','FileCheck2','sales','s4'],
- ['S/4 · Demand Mgmt','PIRs & customer requirements','Database','demand-role','s4'],
- ['S/4 · MRP / MM','Material planning & procurement','ListFilter','mrp-role','s4'],
- ['S/4 · PP/DS','Supply simulation & scheduling','CalendarCheck','ppds','s4'],
- ['S/4 · Production (PP)','Release, staging & goods issue','Factory','execution','s4'],
+ ['S/4 · Demand Mgmt','PIRs & customer/component needs','Database','demand-role','s4'],
+ ['S/4 · MRP / MM','Net requirements & procurement','ListFilter','mrp-role','s4'],
+ ['S/4 · PP/DS','Supply simulation & resource dates','CalendarCheck','ppds','s4'],
+ ['S/4 · Production (PP)','Assembly supply, release & issue','Factory','ato','s4'],
  ['S/4 · QM / Inventory','Inspection, receipt & usable stock','PackageCheck','execution','s4'],
- ['S/4 · aATP','Availability & confirmation','ClipboardCheck','aatp','s4'],
+ ['Availability / aATP','Configured checking and confirmation','ClipboardCheck','promise','s4'],
  ['S/4 · Logistics','Delivery, picking & post goods issue','Truck','logistics','s4'],
  ['S/4 · Billing / FI','Invoice, accounting & actuals','FileCheck2','logistics','s4']
 ];
-const DG={width:1730,left:205,pitch:168,nodeW:144,nodeH:74,row:100,top:64};
-let diagramZoom=null,diagramScale=1,diagramNodes=[],diagramEdges=[];
-function makeDiagram(){
- const steps=getSteps(state),ix=id=>steps.findIndex(s=>s.id===id),mts=state.scenario==='mts',mto=state.scenario==='mto',ibp=usesIbpSupply(state),q=state.qty,h=state.heads;
- const L={engineering:0,config:1,demand:2,supply:3,sales:4,requirements:5,mrp:6,ppds:7,production:8,stock:9,aatp:10,logistics:11,billing:12};
- const nodes=[],edges=[];
- function n(id,step,lane,col,title,detail,extra=''){if(ix(step)<0)return;nodes.push({id,step,index:ix(step),lane,col,title,detail,extra,x:DG.left+col*DG.pitch,y:DG.top+lane*DG.row+12});}
+const DG={width:2020,left:205,pitch:182,nodeW:156,nodeH:78,row:108,top:64};
+let diagramZoom=null,diagramScale=1,diagramNodes=[],diagramEdges=[],diagramHeight=0,diagramUnderlay=null,diagramComparison=null;
+function makeDiagram(s=state){
+ const steps=getSteps(s),ix=id=>steps.findIndex(t=>t.id===id),mts=s.scenario==='mts',mto=s.scenario==='mto',ato=s.scenario==='ato',ibp=usesIbpSupply(s),q=s.qty,h=s.heads,m=getModulePlan(s),gap=moduleShortfall(s);
+ const L={engineering:0,config:1,demand:2,supply:3,inventory:4,sales:5,requirements:6,mrp:7,ppds:8,production:9,stock:10,aatp:11,logistics:12,billing:13};const nodes=[],edges=[];
+ function n(id,step,lane,col,title,detail,extra=''){if(ix(step)<0)return;nodes.push({id,step,index:ix(step),lane,col,title,detail,extra,x:DG.left+col*DG.pitch,y:DG.top+lane*DG.row+14,laneTop:DG.top+lane*DG.row});}
  function e(from,to,label='',kind='solid'){if(nodes.some(n=>n.id===from)&&nodes.some(n=>n.id===to))edges.push({from,to,label,kind});}
- n('foundation','foundation',L.engineering,0,'Product structure','eBOM → mBOM');
- n('source','foundation',L.engineering,2,'Manufacturing source','Version · routing · PDS','Manufacturing master data supports the planning sources and resources in the selected design. VC/AVC alone does not create this planning model.');
- n('model','foundation',L.config,1,state.engine==='VC'?'Classic VC model':'AVC model','KMAT · rules · 150% BOM');
- n('forecast','forecast',L.demand,0,'Baseline forecast',mts?`10 × ${h}-head variant`:'10 printers · mix 6 / 4');
- n('supplyPlan','supplyPlan',L.supply,1,mto?'Shared supply outlook':'Constrained supply','Materials · capacity');
- n('handover','handover',L.supply,2,'Hand over orders',mts?'10 printers · OBP':'6 + 4 modules · OBP');
- n('receivedSupply','handover',L.mrp,2,'Receive planned supply','IBP-owned quantities');
- n('pir','pir',L.requirements,1,mts?'Printer PIR':'Module PIRs',mts?'Strategy 40 · 10 units':'Strategy 70 · 6 + 4');
- n('mrpPre','mrpPre',L.mrp,1,'Advance supply','Planned orders · PRs');
- n('procurePre',ibp?'handover':'mrpPre',L.mrp,ibp?3:2,'Procure parts','PO → receipt → usable','External procurement and remaining component planning stay in the agreed MM/MRP scope. A proposal is not yet usable stock.');
- n('schedulePre','schedulePre',L.ppds,2,'Schedule prebuild',ibp?'Handed-over orders':'PDS · resources · dates');
- n('releasePre','releasePre',L.production,2,'Release & stage','Production orders · GI');
- n('buildPre','buildPre',L.stock,2,mts?'Ready printers':'Ready modules',mts?'10 · anonymous stock':'6 five-head · 4 seven-head');
- n('order','order',L.sales,4,'Sales order request',`${q} printers · ${h} heads`);
- n('selection','order',L.config,4,mts?'Match fixed variant':'Validate & select',mts?`${h}-head execution`:`${state.engine} · selected content`);
- n('demand','demand',L.requirements,4,mts&&!ibp?'Consume printer PIR':'Customer requirement',mts&&!ibp?`${q} order + ${10-q} PIR`:`${q} printers · no parent PIR`);
- n('sync','sync',L.demand,5,'Integrate & consume',`${q} known + ${10-q} forecast`);
- n('sbcCheck','sbcCheck',L.aatp,4,'SBC request','No finished supply ready');
- n('sbcPlan','sbcPlan',L.ppds,5,'Simulate new supply','Components + capacity');
- n('mrp','mrp',L.mrp,mto?6:5,mto?'Supply follow-up':'Explode & net',mto?'Retain accepted proposals':`${q} selected modules`);
- n('procure','mrp',L.mrp,mto?7:6,'Resolve shortages','Buy / make missing parts','Complete the procurement and supply already planned for this requirement. Do not duplicate accepted SBC or IBP proposals.');
- n('schedule','schedule',L.ppds,mto?7:6,mto?'Maintain the plan':'Detailed scheduling','Resource dates');
- n('promise','promise',L.aatp,6,mto?'Confirm SBC result':'Confirm the printer',mto?'Feasible quantity / date':`${q} units · feasible date`);
- n('release','release',L.production,mto?7:6,'Release & stage',!mto&&!ibp?'Module requirement → PIR':'Order-specific production');
- n('build','build',L.stock,7,'Assemble & inspect',`${q} printers · stock E`);
- n('deliver','deliver',L.logistics,8,'Delivery & PGI',`${q} shipped · 0 open`);
- n('feedback','deliver',L.demand,8,'Fulfilment feedback',`${q} fulfilled · ${10-q} open FC`,'Fulfilled quantities remain accounted for in this period example. Integration must also return relevant stock, dates and execution changes to the supply plan.');
- n('invoice','invoice',L.billing,8,'Invoice & close','Billing document · actuals');
- e('foundation','model','Product definition','data');e('foundation','source','Manufacturing model','data');e('model','selection','Valid combinations','data');
- e('source',mto?'sbcPlan':'schedulePre','PDS / resources','data');
- if(ibp){e('forecast','supplyPlan','Demand and expected mix','data');e('supplyPlan','handover','Accepted OBP proposals');e('handover','receivedSupply','Order-based integration');e('receivedSupply','schedulePre','Scheduling ownership');e('receivedSupply','procurePre','Remaining procurement scope');e('sync','supplyPlan','Review supply after order integration','data');}
- else {e('forecast','pir','Agreed forecast','data');e('pir','mrpPre','Requirements');e('mrpPre','procurePre','External parts');e('mrpPre','schedulePre','In-house supply');}
- e('schedulePre','releasePre','Dates & sequence');e('procurePre','releasePre','Usable components');e('releasePre','buildPre','Build · test · GR');
- e('order','selection','Value configuration','data');e('order','demand','Customer requirement');e('order','sync','Order integration','data');
- if(mto){e('order','sbcCheck','Order-entry checking request','data');e('sbcCheck','sbcPlan','Create/check new supply');e('selection','sbcPlan','Selected characteristics','data');e('demand','sbcPlan','New requirement','data');e('sbcPlan','promise','Feasible supply result');e('sbcPlan','mrp','Accepted supply proposals');}
- else {e('selection','mrp','Selected BOM / routing','data');e('demand','mrp','Net requirements');e('order','promise','Confirmation request','data');e('schedule','promise','Dated supply','data');}
- e('mrp','procure','Shortages');e('mrp','schedule','In-house supply');e('schedule','release','Executable plan');e('procure','release','Parts ready');e('release','build','Assembly · test · GR');
- if(mts)e('buildPre','promise','Available printer stock');else if(!mto)e('buildPre','release','Collective module stock');
- e(mts?'buildPre':'build','deliver','Ready printer stock');e('promise','deliver','Confirmed quantity / date','data');e('deliver','invoice','Delivered quantity');e('deliver','feedback','Delivery / GI update','data');e('feedback','sync','Keep fulfilled demand accounted for','feedback');
- return {nodes,edges};
+ n('foundation','foundation',L.engineering,0,'Product structure','eBOM → mBOM');n('source','foundation',L.engineering,3,'Manufacturing source','Version · routing · PDS','Manufacturing master data supports planning sources and resources; configuration alone does not create a finite plan.');
+ n('model','foundation',L.config,1,s.engine==='VC'?'Classic VC model':'AVC model','KMAT · rules · 150% BOM');
+ n('history','history',L.demand,0,'History & signals','Volume · mix · actuals');n('forecast','forecast',L.demand,1,'Baseline forecast',mts?`10 × ${h}-head variant`:'10 printers · model level');n('mix','mix',L.demand,2,'Expected module mix',`${m.five} five-head · ${m.seven} seven-head`);
+ n('balance','balance',L.supply,0,'S&OP decision','Service · cost · constraints');n('buffer','buffer',L.inventory,1,'Stock policy',mts?'Finished-printer stock':`${m.buffer} extra / module type`);
+ n('supplyPlan','supplyPlan',L.supply,2,mto?'Shared supply outlook':'Constrained supply','Materials · capacity');n('handover','handover',L.supply,3,'Hand over orders',mts?'10 printers · OBP':`${m.stockFive} + ${m.stockSeven} modules · OBP`);
+ n('receivedSupply','handover',L.mrp,3,'Receive planned supply','IBP-owned quantities');n('pir','pir',L.requirements,1,mts?'Printer PIR':'Module PIRs',mts?'Strategy 40 · 10 units':`${m.five} + ${m.seven} · separate buffer`);n('mrpPre','mrpPre',L.mrp,2,'Plan advance supply','Net · lot size · lead time');
+ n('procurePre',ibp?'handover':'mrpPre',L.mrp,ibp?4:3,'Procure parts','PO → receipt → usable');n('schedulePre','schedulePre',L.ppds,3,'Schedule prebuild','PDS · bottleneck resources');n('releasePre','releasePre',L.production,3,'Release & stage','Production orders · GI');n('buildPre','buildPre',L.stock,3,mts?'Ready printers':'Anonymous modules',mts?'10 · anonymous stock':`5-head ${m.stockFive} · 7-head ${m.stockSeven}`);
+ n('order','order',L.sales,4,'Sales order request',`${q} printers · ${h} heads`);n('selection','order',L.config,4,mts?'Match fixed variant':'Validate & select',mts?`${h}-head execution`:`${s.engine} · selected content`);n('demand','demand',L.requirements,4,mts&&!ibp?'Consume printer PIR':'Customer requirement',mts&&!ibp?`${q} order + ${10-q} PIR`:`${q} printers · no parent PIR`);
+ n('assemblyOrder','assemblyOrder',L.production,4,'Linked assembly order','SO-1042 · 1:1 reference');n('componentNeed',ato?'assemblyOrder':'mrp',L.requirements,5,'Selected module need',`${q} × ${h}-head modules`);n('componentCheck','componentCheck',L.aatp,5,'Check module supply',gap?`${gap} short · ${m.selectedStock} stocked`:`${q} needed · ${m.selectedStock} stocked`);
+ n('sync','sync',L.demand,5,'Integrate & consume',`${q} known + ${10-q} forecast`);n('sbcCheck','sbcCheck',L.aatp,4,'SBC request','No finished supply ready');n('sbcPlan','sbcPlan',L.ppds,5,'Simulate new supply','Components + capacity');
+ n('mrp','mrp',L.mrp,mto?6:5,mto?'Supply follow-up':ato?'Plan module shortfall':'Explode & net',mto?'Retain accepted proposals':ato?`${gap} missing modules`:`${q} selected modules`);n('procure','mrp',L.mrp,mto?7:6,'Resolve shortages','Buy / make missing parts');
+ n('schedule','schedule',L.ppds,mto?7:ato?5:6,mto?'Maintain the plan':ato?'Assembly resource dates':'Detailed scheduling','Materials · capacity · dates');n('promise','promise',L.aatp,6,mto?'Confirm SBC result':ato?'Confirm assembly date':'Confirm the printer',`${q} units · agreed date`);
+ n('replenish','replenish',L.stock,6,'Receive shortfall',`${gap} more ${h}-head modules`);n('release','release',L.production,mto?7:6,ato?'Release assembly':'Release & stage',ato?`Issue ${q} selected modules`:'Order-specific production');n('build','build',L.stock,7,'Assemble & inspect',`${q} printers · stock E`);
+ n('deliver','deliver',L.logistics,8,'Delivery & PGI',`${q} shipped · 0 open`);n('feedback','deliver',L.demand,8,'Fulfilment feedback',`${q} fulfilled · ${10-q} open FC`);n('invoice','invoice',L.billing,8,'Invoice & close','Billing · accounting');n('review','review',L.demand,9,'Next-cycle review','Error · mix · lead times');
+ e('foundation','model','Product definition','data');e('foundation','source','Manufacturing model','data');e('model','selection','Valid combinations','data');e('source',mto?'sbcPlan':'schedulePre','PDS / resources','data');
+ e('history','forecast','Reviewed history','data');e('forecast',mts?'balance':'mix','Expected volume','data');e('mix','balance','Expected component mix','data');e('balance',mto?'supplyPlan':'buffer','Policy and supply assumptions','data');e('buffer',ibp?'supplyPlan':'pir','Agreed demand and stock policy','data');
+ if(ibp){e('supplyPlan','handover','Accepted OBP proposals');e('handover','receivedSupply','Order integration');e('receivedSupply','schedulePre','Scheduling ownership');e('receivedSupply','procurePre','Procurement scope');e('sync','supplyPlan','Review demand changes','data');}
+ else {e('pir','mrpPre','Module / variant requirements');e('mrpPre','procurePre','External parts');e('mrpPre','schedulePre','In-house supply');}
+ e('schedulePre','releasePre','Dates and sequence');e('procurePre','releasePre','Usable components');e('releasePre','buildPre','Build · inspect · GR');e('order','selection','Value configuration','data');e('order','demand','Customer requirement');e('order','sync','Order integration','data');
+ if(ato){e('order','assemblyOrder','Create linked assembly supply');e('selection','assemblyOrder','Selected components / operations','data');e('demand','assemblyOrder','Customer requirement','data');e('assemblyOrder','componentNeed','Assembly component requirements');e('componentNeed','componentCheck','Selected need','data');e('buildPre','componentCheck','Usable module stock');e('componentCheck',gap?'mrp':'schedule',gap?'Replenish missing modules':'Validate assembly dates');e('schedule','promise','Feasible assembly dates','data');e('promise','release','Customer quantity/date','data');e('assemblyOrder','release','Same linked assembly supply');}
+ else if(mto){e('order','sbcCheck','Order-entry checking request','data');e('sbcCheck','sbcPlan','Plan new supply');e('selection','sbcPlan','Selected characteristics','data');e('demand','sbcPlan','New requirement','data');e('sbcPlan','promise','Feasible supply result');e('sbcPlan','mrp','Accepted proposals');}
+ else {e('selection','mrp','Selected BOM / routing','data');e('demand','mrp','Net requirements');e('mrp','componentNeed','Concrete module requirements','data');e('order','promise','Confirmation request','data');e('schedule','promise','Dated supply','data');}
+ e('mrp','procure','Resolve shortage');e('mrp','schedule','In-house supply');e('schedule','release','Executable dates');e('procure',gap&&hasModuleBuffer(s)?'replenish':'release','Components / supply ready');e('replenish','release','Additional modules usable');e('release','build','Assembly · test · GR');
+ if(mts)e('buildPre','promise','Available finished printers');else if(!mto)e('buildPre','release','Common module stock');
+ e(mts?'buildPre':'build','deliver','Ready printer stock');e('promise','deliver','Confirmed quantity/date','data');e('deliver','invoice','Delivered quantity');e('deliver','feedback','Delivery / GI update','data');e('feedback','sync','Keep fulfilled demand accounted for','feedback');e('feedback','review','Actuals for next plan','data');e('review','history','Next planning cycle','feedback');
+ return{nodes,edges};
 }
-function edgeGeometry(edge,nodes){
- const s=nodes.find(n=>n.id===edge.from),t=nodes.find(n=>n.id===edge.to),w=DG.nodeW,h=DG.nodeH;
- let points;
- if(edge.from==='sync'&&edge.to==='supplyPlan'){const y=DG.top+t.lane*DG.row+4;points=[[s.x+w/2,s.y+h],[s.x+w/2,y],[t.x+w/2,y],[t.x+w/2,t.y]];}
- else if(edge.kind==='feedback'){const y=DG.top+2*DG.row+4;points=[[s.x+w/2,s.y],[s.x+w/2,y],[t.x+w/2,y],[t.x+w/2,t.y]];}
+function nodeSignature(n){return[n.lane,n.col,n.title,n.detail].join('|');}
+function compareDiagrams(primary,secondary){
+ const p=new Map(primary.nodes.map(n=>[n.id,n])),u=new Map(secondary.nodes.map(n=>[n.id,n]));
+ const shared=[],changed=[],primaryOnly=[],underlayOnly=[];
+ for(const n of primary.nodes){if(!u.has(n.id))primaryOnly.push(n);else if(nodeSignature(n)===nodeSignature(u.get(n.id)))shared.push(n);else changed.push({primary:n,underlay:u.get(n.id)});}
+ for(const n of secondary.nodes)if(!p.has(n.id))underlayOnly.push(n);
+ const key=e=>e.from+'|'+e.to+'|'+e.label+'|'+e.kind,pk=new Set(primary.edges.map(key)),uk=new Set(secondary.edges.map(key));
+ return{shared,changed,primaryOnly,underlayOnly,primaryEdges:primary.edges.filter(e=>!uk.has(key(e))),underlayEdges:secondary.edges.filter(e=>!pk.has(key(e)))};
+}
+function layoutDiagrams(primary,secondary,comparison){
+ const expanded=new Set(),shared=new Set(comparison?.shared.map(n=>n.id)||[]);
+ if(secondary)for(const n of secondary.nodes)if(!shared.has(n.id)&&primary.nodes.some(p=>p.lane===n.lane&&p.col===n.col))expanded.add(n.lane);
+ let top=DG.top;const lanes=DIAGRAM_LANES.map((_,i)=>{const row={top,height:expanded.has(i)?204:DG.row,expanded:expanded.has(i)};top+=row.height;return row;});
+ for(const n of primary.nodes){n.laneTop=lanes[n.lane].top;n.y=n.laneTop+14;}
+ if(secondary)for(const n of secondary.nodes){n.laneTop=lanes[n.lane].top;n.y=n.laneTop+14+(lanes[n.lane].expanded&&!shared.has(n.id)?100:0);}
+ return{lanes,height:top};
+}
+function edgeGeometry(edge,nodes,obstacles=nodes){
+ const s=nodes.find(n=>n.id===edge.from),t=nodes.find(n=>n.id===edge.to),w=DG.nodeW,h=DG.nodeH;let points;
+ if(edge.from==='sync'&&edge.to==='supplyPlan'){const y=t.laneTop+4;points=[[s.x+w/2,s.y+h],[s.x+w/2,y],[t.x+w/2,y],[t.x+w/2,t.y]];}
+ else if(edge.kind==='feedback'){const y=Math.min(s.y,t.y)-10;points=[[s.x+w/2,s.y],[s.x+w/2,y],[t.x+w/2,y],[t.x+w/2,t.y]];}
  else if(s.col===t.col&&Math.abs(s.lane-t.lane)===1){points=s.lane<t.lane?[[s.x+w/2,s.y+h],[t.x+w/2,t.y]]:[[s.x+w/2,s.y],[t.x+w/2,t.y+h]];}
- else if(s.lane===t.lane&&s.col<t.col){points=[[s.x+w,s.y+h/2],[t.x,t.y+h/2]];}
- else if(s.col<t.col){const channel=t.x-12;points=[[s.x+w,s.y+h/2],[channel,s.y+h/2],[channel,t.y+h/2],[t.x,t.y+h/2]];}
- else {const channel=s.x+w+12;points=[[s.x+w,s.y+h/2],[channel,s.y+h/2],[channel,t.y+h/2],[t.x+w,t.y+h/2]];}
+ else if(s.lane===t.lane&&s.y===t.y&&s.col<t.col){points=[[s.x+w,s.y+h/2],[t.x,t.y+h/2]];}
+ else if(s.col<t.col){const channel=t.x-13;points=[[s.x+w,s.y+h/2],[channel,s.y+h/2],[channel,t.y+h/2],[t.x,t.y+h/2]];}
+ else{const channel=s.x+w+13,y=t.y-12;points=[[s.x+w,s.y+h/2],[channel,s.y+h/2],[channel,y],[t.x+w/2,y],[t.x+w/2,t.y]];}
+ const blocked=points.some((b,i)=>{if(!i)return false;const a=points[i-1];return obstacles.some(n=>{if([s,t].some(end=>end.x===n.x&&end.y===n.y))return false;return a[0]===b[0]?a[0]>n.x+1&&a[0]<n.x+w-1&&Math.max(a[1],b[1])>n.y+1&&Math.min(a[1],b[1])<n.y+h-1:a[1]>n.y+1&&a[1]<n.y+h-1&&Math.max(a[0],b[0])>n.x+1&&Math.min(a[0],b[0])<n.x+w-1;});});
+ if(blocked){const forward=t.col>s.col,sx=s.x+w+13,tx=forward?t.x-13:t.x+w+13,sy=s.y-12;points=[[s.x+w,s.y+h/2],[sx,s.y+h/2],[sx,sy],[tx,sy],[tx,t.y+h/2],[forward?t.x:t.x+w,t.y+h/2]];points=points.filter((p,i)=>!i||p[0]!==points[i-1][0]||p[1]!==points[i-1][1]);}
  return{d:points.map((p,i)=>(i?'L':'M')+p.join(',')).join(' '),points};
 }
-function renderProcessDiagram(){
- const graph=makeDiagram();diagramNodes=graph.nodes;diagramEdges=graph.edges;const height=DG.top+DIAGRAM_LANES.length*DG.row;
- const phases=[['Product & forecast',0,2],['Advance supply',2,2],['Customer demand',4,2],['Plan & execute',6,2],['Delivery & billing',8,1]];
- let svg=`<svg class="flow-connectors" width="${DG.width}" height="${height}" viewBox="0 0 ${DG.width} ${height}" aria-hidden="true"><defs>${['normal','active','done','data'].map((k,i)=>`<marker id="arrow-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${['#acbcd1','#0070f2','#5a9b86','#a79aca'][i]}"/></marker>`).join('')}</defs>`;
- const sorted=[...graph.edges].sort((a,b)=>Number(graph.nodes.find(n=>n.id===a.to).index===state.index)-Number(graph.nodes.find(n=>n.id===b.to).index===state.index));
- svg+=sorted.map(e=>{const s=graph.nodes.find(n=>n.id===e.from),t=graph.nodes.find(n=>n.id===e.to);const active=t.index===state.index||s.index===state.index&&t.index===state.index,done=s.index<state.index&&t.index<state.index;const cls=active?'active':done?'done':e.kind!=='solid'?'data':'normal';return `<path data-from="${e.from}" data-to="${e.to}" class="flow-edge ${cls} ${e.kind!=='solid'?'dashed':''}" d="${edgeGeometry(e,graph.nodes).d}" marker-end="url(#arrow-${cls})"><title>${esc(s.title+' → '+t.title+': '+e.label)}</title></path>${active&&state.playing?`<circle class="flow-packet" r="3.3" fill="#0070f2"><animateMotion dur="2.5s" repeatCount="indefinite" path="${edgeGeometry(e,graph.nodes).d}"/></circle>`:''}`;}).join('')+'</svg>';
- $('#process-diagram').innerHTML=`<div class="diagram-phase-label" style="width:${DG.left-12}px">APPLICATION / COMPONENT</div>${phases.map(([t,c,span],i)=>`<div class="diagram-phase" style="left:${DG.left+c*DG.pitch-10}px;width:${span*DG.pitch}px"><span>0${i+1}</span>${t}</div>`).join('')}${DIAGRAM_LANES.map((l,i)=>`<div class="swimlane ${l[4]}" style="top:${DG.top+i*DG.row}px;height:${DG.row}px;width:${DG.width}px"><button class="lane-label" data-explain="${l[3]}" style="width:${DG.left-16}px">${icon(l[2])}<span><b>${l[0].replace('VC / AVC',state.engine==='VC'?'Classic VC':'AVC')}</b><small>${l[1]}</small></span><span class="lane-info">ⓘ</span></button></div>`).join('')}${svg}${graph.nodes.map(n=>{const active=n.index===state.index,done=n.index<state.index;return `<button data-node="${n.id}" data-step="${n.index}" class="flow-node ${active?'active':done?'done':'upcoming'} ${n.id==='buildPre'||n.id==='build'?'stock-node':''}" style="left:${n.x}px;top:${n.y}px;width:${DG.nodeW}px;height:${DG.nodeH}px" ${active?'aria-current="step"':''} aria-label="Step ${n.index+1}: ${esc(n.title)}. ${esc(n.detail)}. Open explanation."><span class="node-step">${done?'✓':String(n.index+1).padStart(2,'0')}</span><b>${n.title}</b><small>${n.detail}</small><span class="node-open">↗</span></button>`}).join('')}${state.scenario==='mto'?`<div class="no-prebuild" style="left:${DG.left+168}px;top:${DG.top+8*DG.row}px"><b>No advance stock in this MTO example</b><span>IBP can review shared supply and buffers. Here, SBC + PP/DS plans the printer at order entry; physical production follows confirmation.</span></div>`:''}`;
- $('#process-diagram').style.width=DG.width+'px';$('#process-diagram').style.height=height+'px';sizeDiagram();
+function renderOverlayControls(){
+ if(state.underlay===state.scenario)state.underlay=SCENARIO_ORDER.find(k=>k!==state.scenario);
+ $('#overlay-enabled').checked=state.overlay;$('#underlay-model').innerHTML=SCENARIO_ORDER.map(k=>`<option value="${k}" ${k===state.scenario?'disabled':''}>${SCENARIOS[k].title}${k===state.scenario?' · primary':''}</option>`).join('');$('#underlay-model').value=state.underlay;
+ $('#underlay-model').disabled=!state.overlay;$('#underlay-opacity').disabled=!state.overlay;$('#underlay-opacity-output').textContent=state.underlayOpacity+'%';$('#underlay-opacity').value=state.underlayOpacity;$('#swap-models').disabled=!state.overlay;$('#overlay-differences').disabled=!state.overlay;
 }
-function sizeDiagram(){const viewport=$('#diagram-viewport');if(!viewport||!viewport.clientWidth)return;diagramScale=diagramZoom??Math.max(.72,Math.min(1,viewport.clientWidth/DG.width));$('#process-diagram').style.transform=`scale(${diagramScale})`;$('#diagram-sizer').style.width=DG.width*diagramScale+'px';$('#diagram-sizer').style.height=(DG.top+DIAGRAM_LANES.length*DG.row)*diagramScale+'px';$('#zoom-fit').textContent=`${Math.round(diagramScale*100)}% · Fit`;}
+function renderProcessDiagram(){
+ const graph=makeDiagram(),secondary=state.overlay?makeDiagram({...state,scenario:state.underlay}):null,comparison=secondary?compareDiagrams(graph,secondary):null,layout=layoutDiagrams(graph,secondary,comparison);diagramNodes=graph.nodes;diagramEdges=graph.edges;diagramUnderlay=secondary;diagramComparison=comparison;diagramHeight=layout.height;
+ const obstacles=[...graph.nodes,...(secondary?.nodes||[])];
+ const phases=[['Demand & stock policy',0,3],['Advance supply',3,1],['Customer demand',4,2],['Plan & execute',6,2],['Delivery & review',8,2]];
+ const shared=new Set(comparison?.shared.map(n=>n.id)||[]),changed=new Set(comparison?.changed.map(x=>x.primary.id)||[]),primaryOnly=new Set(comparison?.primaryOnly.map(n=>n.id)||[]);
+ let svg=`<svg class="flow-connectors" width="${DG.width}" height="${diagramHeight}" viewBox="0 0 ${DG.width} ${diagramHeight}" aria-hidden="true"><defs>${['normal','active','done','data','underlay'].map((k,i)=>`<marker id="arrow-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="${['#acbcd1','#0070f2','#5a9b86','#a79aca','#906ca6'][i]}"/></marker>`).join('')}</defs>`;
+ if(secondary)svg+=secondary.edges.filter(e=>{const p=graph.edges.find(p=>p.from===e.from&&p.to===e.to);return!p||edgeGeometry(e,secondary.nodes,obstacles).d!==edgeGeometry(p,graph.nodes,obstacles).d;}).map(e=>`<path class="flow-edge underlay-edge" d="${edgeGeometry(e,secondary.nodes,obstacles).d}" marker-end="url(#arrow-underlay)"><title>${esc(SCENARIOS[state.underlay].title+': '+e.label)}</title></path>`).join('');
+ const sorted=[...graph.edges].sort((a,b)=>Number(graph.nodes.find(n=>n.id===a.to).index===state.index)-Number(graph.nodes.find(n=>n.id===b.to).index===state.index));
+ svg+=sorted.map(e=>{const s=graph.nodes.find(n=>n.id===e.from),t=graph.nodes.find(n=>n.id===e.to),active=t.index===state.index,done=s.index<state.index&&t.index<state.index,cls=active?'active':done?'done':e.kind!=='solid'?'data':'normal',path=edgeGeometry(e,graph.nodes,obstacles).d;return`<path data-from="${e.from}" data-to="${e.to}" class="flow-edge ${cls} ${e.kind!=='solid'?'dashed':''}" d="${path}" marker-end="url(#arrow-${cls})"><title>${esc(s.title+' → '+t.title+': '+e.label)}</title></path>${active&&state.playing?`<circle r="3.3" fill="#0070f2"><animateMotion dur="2.5s" repeatCount="indefinite" path="${path}"/></circle>`:''}`;}).join('')+'</svg>';
+ const ghost=secondary?secondary.nodes.filter(n=>!shared.has(n.id)).map(n=>`<button class="flow-node underlay-node" data-underlay-node="${n.id}" style="left:${n.x}px;top:${n.y}px;width:${DG.nodeW}px;height:${DG.nodeH}px" aria-label="Underlay ${SCENARIOS[state.underlay].title}: ${esc(n.title)}. Open its explanation."><span class="underlay-caption">${state.underlay.toUpperCase()} UNDERLAY</span><b>${n.title}</b><small>${n.detail}</small><span class="node-open">↗</span></button>`).join(''):'';
+ const nodeHtml=graph.nodes.map(n=>{const active=n.index===state.index,done=n.index<state.index,comparisonClass=primaryOnly.has(n.id)?'primary-only':changed.has(n.id)?'compare-changed':shared.has(n.id)?'compare-shared':'';return`<button data-node="${n.id}" data-step="${n.index}" data-compare="${comparisonClass}" class="flow-node ${active?'active':done?'done':'upcoming'} ${comparisonClass} ${['buildPre','build','replenish'].includes(n.id)?'stock-node':''}" style="left:${n.x}px;top:${n.y}px;width:${DG.nodeW}px;height:${DG.nodeH}px" ${active?'aria-current="step"':''} aria-label="Step ${n.index+1}: ${esc(n.title)}. ${esc(n.detail)}. Open explanation."><span class="node-step">${done?'✓':String(n.index+1).padStart(2,'0')}</span><b>${n.title}</b><small>${n.detail}</small><span class="node-open">↗</span></button>`;}).join('');
+ $('#process-diagram').innerHTML=`<div class="diagram-phase-label" style="width:${DG.left-12}px">APPLICATION / COMPONENT</div>${phases.map(([t,c,span],i)=>`<div class="diagram-phase" style="left:${DG.left+c*DG.pitch-10}px;width:${span*DG.pitch}px"><span>0${i+1}</span>${t}</div>`).join('')}${DIAGRAM_LANES.map((l,i)=>`<div class="swimlane ${l[4]} ${layout.lanes[i].expanded?'expanded-lane':''}" style="top:${layout.lanes[i].top}px;height:${layout.lanes[i].height}px;width:${DG.width}px"><button class="lane-label" data-explain="${l[3]}" style="width:${DG.left-16}px">${icon(l[2])}<span><b>${l[0].replace('VC / AVC',state.engine==='VC'?'Classic VC':'AVC')}</b><small>${l[1]}${layout.lanes[i].expanded?`<em>${state.scenario.toUpperCase()} above · ${state.underlay.toUpperCase()} below</em>`:''}</small></span><span class="lane-info">ⓘ</span></button></div>`).join('')}${svg}${ghost}${nodeHtml}`;
+ $('#process-diagram').style.width=DG.width+'px';$('#process-diagram').style.height=diagramHeight+'px';$('#process-diagram').style.setProperty('--underlay-opacity',state.underlayOpacity/100);
+ $('#overlay-summary').hidden=!secondary;if(secondary)$('#overlay-summary').innerHTML=`<div><b>${SCENARIOS[state.scenario].title}</b> primary <span>over</span> <b>${SCENARIOS[state.underlay].title}</b> underlay</div><div class="comparison-key"><span class="shared-key">${comparison.shared.length} matching step labels</span><span class="changed-key">${comparison.changed.length} different steps / positions</span><span class="primary-key">${comparison.primaryOnly.length} primary-only</span><span class="underlay-key">${comparison.underlayOnly.length} underlay-only</span></div><p>Same quantity, module selection, mix, buffer and planning ownership. Shared labels are drawn once; differences stay faded and clickable in the same application lane. ATO and CTO can overlap; this compares the chosen assembly-supply routes.</p>`;
+ sizeDiagram();
+}
+function showUnderlayDetails(id){
+ const node=diagramUnderlay?.nodes.find(n=>n.id===id);if(!node)return;const s=getSteps({...state,scenario:state.underlay})[node.index];
+ openDialog(node.title,`<p class="callout">Comparison underlay: <b>${SCENARIOS[state.underlay].title}</b>. Playback and quantities continue to belong to the primary ${SCENARIOS[state.scenario].title} model.</p><p>${s.summary}</p><ul class="tasks">${s.tasks.map(t=>`<li>${t}</li>`).join('')}</ul><div class="object-line"><span>OUTPUT</span><b>${s.output}</b></div><p>${s.next}</p><button class="text-link" data-explain="${s.explain}">Explain the concept ↗</button>`,EXPLANATIONS[s.explain]?.sources||[],'COMPARISON UNDERLAY · '+DIAGRAM_LANES[node.lane][0]);
+}
+function showOverlayDifferences(){
+ const d=diagramComparison;if(!d)return;const item=(n,underlay=false)=>`<li><button class="text-link" ${underlay?'data-underlay-node':'data-node'}="${n.id}">${esc(n.title)} ↗</button><small>${DIAGRAM_LANES[n.lane][0]} · ${esc(n.detail)}</small></li>`;
+ openDialog(`${SCENARIOS[state.scenario].title} compared with ${SCENARIOS[state.underlay].title}`,`<p>The same order, supply-planning choice, module mix and buffer are used for both routes. These are reference-design differences; ATO and CTO can describe the same business process.</p><h3>Only in the primary route</h3><ul class="difference-list">${d.primaryOnly.map(n=>item(n)).join('')||'<li>No exclusive steps.</li>'}</ul><h3>Only in the underlay route</h3><ul class="difference-list">${d.underlayOnly.map(n=>item(n,true)).join('')||'<li>No exclusive steps.</li>'}</ul><h3>Different labels or positions</h3><table class="difference-table"><thead><tr><th>Primary</th><th>Underlay</th></tr></thead><tbody>${d.changed.map(x=>`<tr><td>${x.primary.title}<small>${x.primary.detail}</small></td><td>${x.underlay.title}<small>${x.underlay.detail}</small></td></tr>`).join('')}</tbody></table><p>${d.shared.length} step labels match. ${d.primaryEdges.length} connections differ in the primary, and ${d.underlayEdges.length} in the underlay.</p><button class="text-link" data-explain="ato">ATO, CTO and the stock point ↗</button>`,[],'DIAGRAM COMPARISON');
+}
+function sizeDiagram(){const viewport=$('#diagram-viewport');if(!viewport||!viewport.clientWidth)return;diagramScale=diagramZoom??Math.max(.72,Math.min(1,viewport.clientWidth/DG.width));$('#process-diagram').style.transform=`scale(${diagramScale})`;$('#diagram-sizer').style.width=DG.width*diagramScale+'px';$('#diagram-sizer').style.height=diagramHeight*diagramScale+'px';$('#zoom-fit').textContent=`${Math.round(diagramScale*100)}% · Fit`;}
 function changeDiagramZoom(amount){diagramZoom=Math.min(1.6,Math.max(.6,diagramScale+amount));sizeDiagram();focusActiveNode(true);}
 function focusActiveNode(force=false){
  if(!$('#follow-step').checked||!state.playing&&!force)return;

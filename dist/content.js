@@ -81,24 +81,8 @@ const SCENARIOS = {
  cto:{title:'Configure-to-Order',note:'Reference design: configurable parent on an MTO route · forecast and prebuild collective modules. Customer choices trigger final order-specific assembly; strategy 70 is illustrated in the S/4-led alternative.',stock:'Common modules',trigger:'Forecast for modules; order for the printer',pir:'Modules; no final-printer PIR',segment:'Collective modules → sales-order stock E',risk:'Module mix, shortages and final-assembly capacity',before:'Forecast, procure and build common modules.',after:'Select modules, plan final assembly and ship.'}
 };
 function usesIbpSupply(s){return s.supply==='ibp';}
-function getSequence(s){
- const mto=s.scenario==='mto',mts=s.scenario==='mts',ibp=usesIbpSupply(s);
- const sequence=['foundation','forecast'];
- if(ibp)sequence.push('supplyPlan');
- if(!mto)sequence.push(...(ibp?['handover']:['pir','mrpPre']),'schedulePre','releasePre','buildPre');
- sequence.push('order','demand');
- if(mto)sequence.push('sbcCheck','sbcPlan','promise','sync','mrp','schedule');
- else {sequence.push('sync');if(!mts)sequence.push('mrp','schedule');sequence.push('promise');}
- if(!mts)sequence.push('release','build');
- return [...sequence,'deliver','invoice'];
-}
-function getScenarioNote(s){
- const common=SCENARIOS[s.scenario].note;
- const scope=usesIbpSupply(s)?s.scenario==='mto'?'IBP reviews shared supply and capacity; SBC + PP/DS plans the customer-specific printer before confirmation.':'IBP plans constrained network supply and hands over planned orders; the same quantities are not independently replanned here.':'S/4 owns operational supply planning; IBP provides the demand outlook in this scope.';
- return common+' '+scope;
-}
-function getSteps(s){
- const mts=s.scenario==='mts',mto=s.scenario==='mto',q=s.qty,h=s.heads,selected=h===7?4:6,engine=s.engine==='VC'?'classic VC':'AVC',ibp=usesIbpSupply(s);
+function defineBaseSteps(s){
+ const mts=s.scenario==='mts',mto=s.scenario==='mto',q=s.qty,h=s.heads,selected=getModulePlan(s).selectedDemand,engine=s.engine==='VC'?'classic VC':'AVC',ibp=usesIbpSupply(s);
  const define=(id,owner,icon,title,summary,tasks,output,next,explain)=>({id,owner,icon,title,summary,tasks,output,next,explain});
  const steps={
  foundation:define('foundation','Engineering + master data','FolderTree','Prepare product and manufacturing master data',`The journey starts before SO-1042. Engineering and manufacturing agree the structure; ${engine} supplies the configuration logic.`,['Transfer the eBOM into a manufacturing model; decide where fixed material variants are useful.','Maintain KMAT, class 300, characteristics, profile, dependencies, super-BOM and super-routing.','Maintain the production version, resources and times; generate the relevant PDS for PP/DS.'],'Valid product model + manufacturing source','Sales can value a configuration. MRP selects content. PP/DS uses the production source.','vc'),
@@ -160,5 +144,5 @@ function getSteps(s){
   steps.mrp.next='Complete purchasing and production preparation; manage changes to the accepted plan.';
   steps.schedule.title='Maintain the detailed production plan';steps.schedule.summary='Prepare execution and keep the accepted order plan aligned with material and resource changes.';steps.schedule.next='A material or capacity change may require reconsidering the confirmation. This is follow-up to the SBC plan.';
  }
- return getSequence(s).map(id=>steps[id]);
+ return steps;
 }

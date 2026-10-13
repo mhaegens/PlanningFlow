@@ -8,7 +8,7 @@ SCENARIOS.cto.note='CTO reference: customer configuration selects the manufactur
 function getModulePlan(s){const seven=10*Number(s.attach??40)/100,five=10-seven,buffer=(s.scenario==='ato'||s.scenario==='cto')?Number(s.buffer??0):0;return{five,seven,buffer,stockFive:five+buffer,stockSeven:seven+buffer,feeder:10+buffer,finishing:10+buffer,selectedDemand:s.heads===7?seven:five,selectedStock:(s.heads===7?seven:five)+buffer};}
 function hasModuleBuffer(s){return s.scenario==='ato'||s.scenario==='cto';}
 function moduleShortfall(s){return hasModuleBuffer(s)?Math.max(0,s.qty-getModulePlan(s).selectedStock):s.scenario==='mto'?s.qty:0;}
-function getSequence(s){
+function getPlanningSequence(s){
  const mto=s.scenario==='mto',mts=s.scenario==='mts',ato=s.scenario==='ato',ibp=usesIbpSupply(s),gap=moduleShortfall(s);
  const sequence=['foundation','history','forecast'];if(!mts)sequence.push('mix');sequence.push('balance');if(!mto)sequence.push('buffer');if(ibp)sequence.push('supplyPlan');
  if(!mto)sequence.push(...(ibp?['handover']:['pir','mrpPre']),'schedulePre','releasePre','buildPre');
@@ -20,7 +20,7 @@ function getSequence(s){
  return [...sequence,'deliver','invoice','review'];
 }
 function getScenarioNote(s){const scope=usesIbpSupply(s)?'Selected handover: IBP order-based supply → S/4 scheduling and execution.':'Selected handover: IBP demand/buffer decisions → S/4 requirements and supply planning.';return SCENARIOS[s.scenario].note+' '+scope;}
-function getSteps(s){
+function getPlanningSteps(s){
  const steps=defineBaseSteps(s),m=getModulePlan(s),mts=s.scenario==='mts',mto=s.scenario==='mto',ato=s.scenario==='ato',modules=hasModuleBuffer(s),gap=moduleShortfall(s),q=s.qty,h=s.heads,ibp=usesIbpSupply(s);
  const define=(id,owner,icon,title,summary,tasks,output,next,explain)=>({id,owner,icon,title,summary,tasks,output,next,explain});
  steps.history=define('history','SAP IBP · Demand inputs','ChartNoAxesCombined','Review history and market signals','Use historical orders and shipments, product changes and commercial knowledge to build a useful planning baseline.',['Check data quality and distinguish lost demand, one-off orders and recurring business.','Review the ordered configuration mix; history informs attachment rates but does not guarantee the next mix.','Demand sensing can add short-term signals where it fits the data and business case.'],'Reviewed history and planning assumptions','The next step agrees the expected printer volume.','ibp-deep');
@@ -50,7 +50,7 @@ function getSteps(s){
   steps.release.title='Release assembly and issue the modules';steps.release.summary=`Release the linked assembly work and physically issue ${q} selected print modules, feeders and finishing modules.`;steps.release.output='Linked assembly order released; modules physically issued';steps.release.explain='ato';
  }
  steps.review=define('review','SAP IBP · next planning cycle','ChartNoAxesCombined','Review actuals, mix and supplier performance','Use fulfilled demand and replenishment results to improve the next plan.',['Compare the forecast made earlier with actual quantities and configuration mix.','Review supplier on-time delivery and actual versus planned replenishment lead times.','Adjust mix, buffer policy or supply assumptions in the next planning cycle; forecast consumption did not automatically retrain the forecast.'],'Planning review: volume, mix, forecast error and lead-time performance','Agree the next plan and its service/inventory trade-off.','ibp-deep');
- return getSequence(s).map(id=>steps[id]);
+ return getPlanningSequence(s).map(id=>steps[id]);
 }
 Object.assign(SOURCES,{
  atoSettings:{title:'SAP Help · Settings for assemble-to-order',url:'https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/21aead0c98bd4755abdacd91c99e3393/3777b6535fe6b74ce10000000a174cb4.html'},

@@ -1,6 +1,6 @@
 # Canon Production Printing — Process Explorer
 
-Standalone Coolify deployment package, updated on 13 October 2026 using the v4 process reference and IBP expert feedback.
+Standalone Coolify deployment package, updated on 13 October 2026 using the v5 complete process reference, retaining the IBP expert feedback.
 All HTML, CSS, JavaScript, fonts, logos, and icons are included in `dist/`.
 There is no build step, backend, database, API key, or required environment variable.
 The process simulator runs in the browser and has no live SAP connection.
@@ -44,6 +44,10 @@ The site was already compatible with static hosting. You can instead select **St
 - Switch between Order process, Demand lab, Compare, and Reference; refresh each section.
 - Change the fulfilment scenario and supply-planning design, advance the process, and open a step explanation.
 - The opening view is Assemble-to-Order. Change module mix and extra stock, and follow the module receipts, assembly order, component issue and finished-printer receipt.
+- In ATO, compare the PP/DS scopes: modules only versus modules plus final assembly. Check the changed promise basis.
+- Open the optional pMRP, PAL, ABC and BOP cards; they explain capability choices without advancing the order.
+- Compare delivery preparation with PGI: finished-printer stock falls only at PGI.
+- Open Compare for the coverage matrix and direct links to all eight VC/AVC diagrams.
 - Enable Comparison underlay, select another scenario, inspect its faded nodes and use Swap models.
 - Open IBP planning for the volume/mix/buffer flow and supply-handover choices.
 - In MTO, check the SBC request → PP/DS simulation → confirmation sequence.
@@ -70,7 +74,7 @@ docker inspect --format '{{.State.Health.Status}}' canon-process-explorer
 
 Edit the files in `dist/`, commit/push, and redeploy in Coolify. These are the editable source files; no compilation is required. The server asks browsers to revalidate cached files so updates use the current CSS, JavaScript, and logo assets.
 
-The package preserves the application files from source commit `6200002abca334827a347d649c29e1f5c602db02`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
+The package preserves the application files from source commit `54cfae67607e2aef2d76c08aaa38ed6ffe2bd83f`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
 
 ## Documentation
 

@@ -1,3 +1,20 @@
+# V5 completeness update — 13 October 2026
+
+The supplied v5 complete reference is incorporated into the existing explorer. ATO remains the opening Canon reference; prior IBP, mix/buffer, supply-ownership and underlay functions remain available.
+
+- All four fulfilment references show the full VC or AVC master-data chain: configurable material/class 300, profile and planning strategy, dependencies, super-BOM/routing and manufacturing source/PDS. AVC modelling/simulation/trace tools are explicit. No operational AVC lanes are replaced with “unchanged” stubs.
+- Availability now shows the initial material or supply-creation check, the customer confirmation and optional PAL, ABC and BOP branches. They are deliberately not a compulsory serial pipeline.
+- Order-driven routes show an explicit capacity-feasible promise basis. MTO retains SBC + PP/DS; CTO plans before confirming. The older CTP term is explained separately.
+- ATO can switch between module-only PP/DS scope and modules plus final assembly. Module-only scope uses basic assembly lead time and does not claim finite final-assembly capacity.
+- Outbound delivery creation/picking, PGI and billing are separate playback milestones. Stock and shipped quantities change at PGI, not delivery creation. Accounting/actuals and applicable cost settlement are visible.
+- pMRP is an optional upstream simulation for forecast-driven scope, including prebuilt modules in the chosen CTO reference.
+- A new coverage matrix describes shared layers, deliberate scenario differences, optional capabilities and the eight complete diagram routes.
+- Comparison tables now use equal scenario-column widths.
+
+Product clarifications and sources are recorded in CONTENT-REVIEW.md. Browser checks are in VERIFICATION.md.
+
+---
+
 # Content update — 13 October 2026
 
 The explorer uses the supplied v4 reference and the IBP expert preparation-session transcript. Raw source documents and meeting chatter are not included in the website.

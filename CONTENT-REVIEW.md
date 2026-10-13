@@ -1,3 +1,30 @@
+# V5 product checks and reference-design choices
+
+V5 adds useful coverage, but some statements need qualification before appearing in a process reference:
+
+1. **PAL / ABC / BOP are capabilities, not four mandatory order-entry steps.** PAL can restrict allocation, ABC evaluates permitted alternatives and BOP rechecks existing confirmations after demand/supply changes. The diagram separates these optional branches. SBC checking-route restrictions, including ABC with CDP, are noted.
+2. **CTP terminology is not a second mandatory S/4 run.** The linked SAP CTP documentation describes SAP APO Global ATP. The modern S/4 aATP example uses SBC + PP/DS and the returned material/resource result. CTO's shown route plans first; ATO needs a validated assembly-processing/confirmation integration.
+3. **Finite scope is a design choice.** Both ATO scopes prebuild modules in PP/DS; only the full scope includes final printer assembly and its finite resources. Using PP/DS alone does not make every resource finite. Canon's actual assembly bottleneck and promised lead time remain to be validated.
+4. **Capacity Availability Settings is not evidence of finite printer assembly.** The similarly named SAP Help app is documented under Transportation Management. V5's 68A claim is not used as an assembly-capacity substitute.
+5. **pMRP follows forecast scope.** The chosen CTO reference prebuilds common modules, so an upstream pMRP simulation can be evaluated too. The MTO teaching example has no advance stock; long-lead/common-part preplanning is a separate valid design.
+6. **Delivery creation, PGI and billing differ.** The example's printer stock leaves at PGI. Settlement depends on the cost-object/accounting design; it is not universal financial closure at invoice creation.
+7. **AVC tools have a defined role.** Verified modelling, Fiori valuation, simulation and trace functions are shown. No generic configuration-history claim is used as a planning capability.
+8. **Previous factual corrections remain.** ATO can overlap CTO; CU80/CBF naming, attachment-rate ownership, PIR versus planned-order integration, safety stock versus demand and configurable MRP horizons remain as clarified below.
+
+## Additional official documentation
+
+- [aATP capabilities](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/f132c385e0234fe68ae9ff35b2da178c/00497dff45fa4c50b11be4c653de094d.html)
+- [BOP](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/f132c385e0234fe68ae9ff35b2da178c/73a1a457ef816b10e10000000a441470.html)
+- [SBC supported checking routes and restrictions](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/f132c385e0234fe68ae9ff35b2da178c/95cbb18b60da470cac8d340f0c6f5251.html)
+- [CTP in SAP APO](https://help.sap.com/saphelp_scm700_ehp02/helpdata/en/12/42c95360267614e10000000a174cb4/content.htm?no_cache=true)
+- [Capacity availability settings in Transportation Management](https://help.sap.com/docs/SAP_S4HANA_CLOUD/61e246f4b34c4e1790d8b7651c0b40a8/d05be7c0ad6d4378bccde8fb8e941abc.html)
+- [pMRP](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/21aead0c98bd4755abdacd91c99e3393/61d3f1634dae44608b46b79e36d77dfb.html)
+- [Planning assemblies with pMRP](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/feded183701e4ba0b42bc4fc31ad7a12/0e98e873dd4543389a84a7e76138f953.html)
+- [AVC tools](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/36802406aebb4b96b1598246e1d316ee/76276945f5d24a119ff4aeaca6ded355.html)
+- [AVC model trace](https://help.sap.com/docs/SAP_S4HANA_CLOUD/f369b2eff700401494ba6e7c9a573288/37e5ba48435348d0b42f3b88fcc21fee.html)
+
+---
+
 # Product checks and reference-design choices
 
 The business concepts from the expert session are incorporated. Some v4 product statements were refined before publication:

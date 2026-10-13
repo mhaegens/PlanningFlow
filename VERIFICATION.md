@@ -1,3 +1,14 @@
+# Getting-started guide verification — 13 October 2026
+
+- All 14 guided steps checked at 390, 768 and 1,440 pixels. Highlight and card remain inside the viewport without overlapping or page overflow.
+- First-visit invitation, remembered completion/skip, header/footer replay, Back/Next, arrow keys, Escape and focus containment pass.
+- Non-default scenario/configurator/supply/underlay/order and Demand lab settings, reference search and scroll position survive a replay and early dismissal. Guide navigation does not advance order playback.
+- Guide works when browser preference storage is unavailable. Existing disclaimer popup remains functional. No browser script errors occurred.
+- Reviewed desktop, tablet and phone screenshots. Guide and app scripts pass syntax checks.
+- Guide scripts/styles return HTTP 401 before login. The guide appears only after authentication; the header fits at 390 × 844 pixels with both Getting started and Sign out.
+
+---
+
 # Footer disclaimer verification — 13 October 2026
 
 - Disclaimer opens from the footer on all five pages in the existing native dialog.

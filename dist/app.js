@@ -62,6 +62,7 @@ function renderModuleStock(){
 }
 function renderJourney(){
  const steps=getSteps(state);state.index=Math.min(state.index,steps.length-1);const step=steps[state.index];
+ $('#quantity').value=state.qty;$('#heads').value=state.heads;
  $$('[data-scenario]').forEach(b=>{b.classList.toggle('active',b.dataset.scenario===state.scenario);b.setAttribute('aria-pressed',String(b.dataset.scenario===state.scenario));});
  $$('[data-engine]').forEach(b=>{b.classList.toggle('active',b.dataset.engine===state.engine);b.setAttribute('aria-pressed',String(b.dataset.engine===state.engine));});
  $('#scenario-note').textContent=getScenarioNote(state);
@@ -139,7 +140,8 @@ async function init(){
  $('#close-dialog').onclick=()=>$('#detail-dialog').close();$('#detail-dialog').addEventListener('close',()=>returnFocus?.isConnected&&returnFocus.focus());$('#detail-dialog').addEventListener('click',e=>{if(e.target===$('#detail-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
  $('#lab-forecast').oninput=e=>{lab.forecast=Number(e.target.value);renderLab();};$('#lab-order').oninput=e=>{lab.order=Number(e.target.value);renderLab();};$('#ibp-mode').onchange=e=>{lab.mode=e.target.value;renderLab();};$('#match').onchange=e=>{lab.match=e.target.value==='yes';renderLab();};$('#attach').oninput=e=>{lab.attach=Number(e.target.value);renderLab();};$('#lab-heads').onchange=e=>{lab.heads=Number(e.target.value);renderLab();};$('#reference-search').oninput=e=>renderReference(e.target.value);
  window.addEventListener('hashchange',()=>routeFromHash(true));window.addEventListener('popstate',()=>routeFromHash(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
- document.addEventListener('keydown',e=>{if($('#detail-dialog').open||/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)||state.tab!=='journey')return;if(e.key==='ArrowRight'){e.preventDefault();setStep(state.index+1);}if(e.key==='ArrowLeft'){e.preventDefault();setStep(state.index-1);}});
+ document.addEventListener('keydown',e=>{if($('#detail-dialog').open||$('#guide-dialog').open||$('#guide-welcome').open||/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)||state.tab!=='journey')return;if(e.key==='ArrowRight'){e.preventDefault();setStep(state.index+1);}if(e.key==='ArrowLeft'){e.preventDefault();setStep(state.index-1);}});
  document.documentElement.dataset.ready='true';
+ document.dispatchEvent(new Event('explorer-ready'));
 }
 init();

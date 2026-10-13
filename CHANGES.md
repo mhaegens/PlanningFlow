@@ -1,3 +1,13 @@
+# Customer getting-started guide — 13 October 2026
+
+- Added a first-visit invitation and a 14-step customer guide with real control highlights, Next/Back, Skip, Escape and keyboard navigation.
+- Covers scenario selection, planning handovers, example inputs, ATO assembly scope, order playback, diagram explanations, comparison underlay, demand versus stock, Demand lab, IBP planning, Compare, Reference and the footer assumptions/disclaimer.
+- Getting started remains available in the header and footer; a completed or skipped guide is remembered in this browser. No account record or analytics service is used.
+- The guide temporarily shows a standard ATO example and restores the previous view, settings, order position, search, diagram zoom and scroll position when closed. Playback stays paused.
+- Existing scenarios, process calculations, disclaimers and server-side password access remain in place.
+
+---
+
 # Footer disclaimer — 13 October 2026
 
 - Added a Disclaimer link beside Model assumptions in the shared footer, using the same accessible popup.

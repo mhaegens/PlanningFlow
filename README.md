@@ -68,10 +68,14 @@ docker build -t canon-process-explorer .
 docker run --rm --env-file .env -e NODE_ENV=development -e ALLOW_INSECURE_HTTP=1 -p 127.0.0.1:8080:80 canon-process-explorer
 ```
 
+## Getting started
+
+The explorer offers a short customer guide on the first visit after login. Use **Getting started** in the header or footer to replay it. Finishing or skipping the guide is remembered in that browser. The tour restores the visitor's example settings and view when closed; playback remains paused. No analytics service or account record is created for this preference.
+
 ## Update content
 
 The explorer files remain editable in `dist/`. Commit/push changes, then redeploy in Coolify. Keep `server.mjs` and `public/` alongside `dist/`; these enforce access and provide the login page. `.env` files are excluded from Git and the Docker build.
 
-The explorer content remains based on published source commit `730fc92ac4c5c51fd873a02c23e04ecf237a312d`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
+The explorer content remains based on published source commit `36031c6ea0b8d7770e0f2e9e82d27e5603f13b24`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
 
 See `CHANGES.md`, `CONTENT-REVIEW.md`, `SECURITY.md` and `VERIFICATION.md` for the process-model and access-control details.

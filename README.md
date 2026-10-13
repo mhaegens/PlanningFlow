@@ -72,6 +72,6 @@ docker run --rm --env-file .env -e NODE_ENV=development -e ALLOW_INSECURE_HTTP=1
 
 The explorer files remain editable in `dist/`. Commit/push changes, then redeploy in Coolify. Keep `server.mjs` and `public/` alongside `dist/`; these enforce access and provide the login page. `.env` files are excluded from Git and the Docker build.
 
-The explorer content remains based on published source commit `5ced26c62bd333c7649370d9152bf4d055a83a21`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
+The explorer content remains based on published source commit `730fc92ac4c5c51fd873a02c23e04ecf237a312d`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
 
 See `CHANGES.md`, `CONTENT-REVIEW.md`, `SECURITY.md` and `VERIFICATION.md` for the process-model and access-control details.

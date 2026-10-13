@@ -1,3 +1,12 @@
+# Footer disclaimer — 13 October 2026
+
+- Added a Disclaimer link beside Model assumptions in the shared footer, using the same accessible popup.
+- Adapted the supplied SAP presentation wording for the website: illustrative models and quantities, possible errors or omissions, validation before use, existing agreements, future statements, confidentiality and trademark ownership.
+- Included the limits for intentional misconduct, gross negligence and liability that cannot lawfully be excluded. The wording does not guarantee an exemption from liability.
+- Linked the official SAP legal notice for materials. This is separate from model assumptions and contains no internal briefing references.
+
+---
+
 # Reader-facing copy cleanup — 13 October 2026
 
 - Removed internal briefing versions, source-document mentions and preparation-session provenance from the explorer, its popups and expandable notes.

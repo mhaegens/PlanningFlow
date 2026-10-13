@@ -1,3 +1,13 @@
+# Footer disclaimer verification — 13 October 2026
+
+- Disclaimer opens from the footer on all five pages in the existing native dialog.
+- Escape and the close button dismiss the popup; keyboard focus returns to the footer trigger. Model assumptions still opens correctly.
+- The SAP legal source link and errors/omissions wording are present; long text scrolls within the popup.
+- Footer and popup layouts checked at 390, 768 and 1,440 pixels, with no page overflow or browser script errors.
+- Only frontend copy, footer styling and documentation changed. The server-side password gate and proxy handling remain unchanged.
+
+---
+
 # Reader-facing content audit — 13 October 2026
 
 - Reviewed 2,756 rendered or generated content entries, including all five pages, 24 explanation definitions, application-role popups, glossary, diagram-node explanations and step text across scenario/configurator/planning/scope variants.

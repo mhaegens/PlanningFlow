@@ -28,3 +28,8 @@ html{scroll-padding-top:calc(var(--topbar-height,84px) + 12px)}.process-board .p
 .compare-table{table-layout:fixed}.compare-table th{width:19.5%}.compare-table th:first-child{width:22%}.compare-table th:nth-child(4),.compare-table td:nth-child(4){background:transparent}.coverage-table th:first-child{width:22%}.coverage-table th{width:19.5%}
 
 .footer-links{display:flex;align-items:center;flex-wrap:wrap;gap:20px}
+
+/* Demand lab keeps matching and module requirement timing explicit. */
+.lab-scope-note{font-size:13px;line-height:1.6;color:#61758e;background:#edf3fc;border-left:3px solid #89b6ef;padding:13px 16px;margin-bottom:24px}.lab-scope-note .text-link{font-size:12px;white-space:nowrap}.module-table-wrap{overflow-x:auto;max-width:100%;margin-top:22px}.module-table-wrap .module-table{min-width:690px;margin-top:0}.module-stage-label{flex-basis:100%}.module-controls{flex-wrap:wrap}.module-stage-label select{max-width:100%}.lab-main{min-width:0}@media(max-width:700px){.module-stage-label{font-size:12px}.module-stage-label select{width:100%;font-size:12px}.lab-scope-note{font-size:12px}.module-table-wrap .module-table{min-width:620px}}
+
+.module-scroll-hint{display:none}@media(max-width:1180px){.module-scroll-hint{display:block;font-size:11px;margin:8px 0 20px}}

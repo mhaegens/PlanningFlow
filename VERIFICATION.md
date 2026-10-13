@@ -1,3 +1,16 @@
+# Demand lab verification — 14 October 2026
+
+- Original printer arithmetic: 23,064 combinations pass.
+- Revised independent IBP/S/4 matching: 46,128 combinations across every integer forecast/order value from 0 to 30, all three modes, both eligibility settings in each system, and all four events.
+- Module arithmetic: 253,704 combinations across every forecast/order value, eleven attachment rates, both module choices, three production-requirement stages and four events. Conservation, nonnegative residuals, matching-only consumption, module selection and explicit cancellation retention pass.
+- 240 rendered browser states checked through the actual inputs/events. Presets, zero inputs, forecast-only display, independent matching and module-stage results pass; no script errors occur.
+- Customer-guide replay preserves the new matching and production-stage controls. The calculation-scope popup resolves four official SAP sources.
+- Desktop/tablet/phone layouts checked at 1,440, 768 and 390 pixels. Module columns scroll within their panel; there is no page overflow.
+- Source and changed scripts pass syntax/diff checks. Existing password-gate server code is unchanged.
+- The checks cover the explicitly bounded teaching model. Actual SAP master data, integration timing, daily consumption windows, multi-order allocation, supply and capacity are outside this lab.
+
+---
+
 # Getting-started guide verification — 13 October 2026
 
 - All 14 guided steps checked at 390, 768 and 1,440 pixels. Highlight and card remain inside the viewport without overlapping or page overflow.

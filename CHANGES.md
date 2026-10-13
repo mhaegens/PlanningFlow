@@ -1,3 +1,14 @@
+# Demand lab corrections — 14 October 2026
+
+- Separated IBP forecast eligibility from S/4 PIR eligibility and made unmatched totals explicitly cover the example horizon.
+- Corrected forecast-only states and empty-order/forecast explanations.
+- Added an explicit module requirement stage: selection only, eligible production requirement or unmatched production requirement. The table distinguishes configured need, production requirements, consumption and residual PIR.
+- Made retained production requirements visible in the customer-cancellation example, and clarified the independent stage selection.
+- Added a calculation-scope explanation with SAP sources and responsive horizontal scrolling for the module table.
+- Updated the customer guide to explain and preserve the new controls. Password access is unchanged.
+
+---
+
 # Customer getting-started guide — 13 October 2026
 
 - Added a first-visit invitation and a 14-step customer guide with real control highlights, Next/Back, Skip, Escape and keyboard navigation.

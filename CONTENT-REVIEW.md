@@ -1,3 +1,24 @@
+# Demand lab correctness review — 14 October 2026
+
+The printer-level arithmetic passed the original 23,064 combinations. The review found misleading states and insufficient separation of module timing; the following corrections are now applied:
+
+1. IBP and S/4 consumption eligibility are independent controls. The shown variant/location and forecast/PIR reference quantities stay fixed for the comparison. Totals without an eligible match span the example horizon and do not imply a common requirement date.
+2. Forecast-only IBP has no order input or order-aware total. It is not described as waiting for integration, and its matching control is disabled. Zero-demand cases no longer contain contradictory “10, not 10” text.
+3. The separate strategy-70 module example distinguishes configured future need, a production requirement, consumed PIR and residual PIR. Sales-order arrival and IBP integration alone consume no module PIR. An explicitly selected eligible production requirement consumes the matching module PIR; an unmatched requirement does not.
+4. The customer cancellation event removes the customer requirement after updates/recalculation. It does not change the independent module production-stage selector. A retained production requirement remains visible until that stage is changed; real linked-order and firm-supply cancellation must be validated separately.
+5. The calculation-scope popup states the limits: one order/forecast pool before shipment; no actual dates, daily sequencing, multiple-order allocation, partial-window overlap, physical stock netting or capacity result. OBP assumes forecasts and orders are both selected in the planning run. Other demand selections can behave differently.
+
+Official checks:
+
+- [Time-series consumption profile inputs and outputs](https://help.sap.com/docs/SAP_INTEGRATED_BUSINESS_PLANNING/feae3cea3cc549aaa9d9de7d363a83e6/6b6f48f2887e4a358242b6a7352441a5.html)
+- [OBP consumption/reduction and planning-run demand selections](https://help.sap.com/docs/SAP_INTEGRATED_BUSINESS_PLANNING/c1fb60cb1e9c49d99ada277ae57e9e6c/4d3429bbdaac417dbe16af9886fa15fc.html)
+- [Strategy 40](https://help.sap.com/docs/SAP_S4HANA_CLOUD/2bba750d1e124e1ea2a039bb1cd9b6c5/3923bf53d25ab64ce10000000a174cb4.html)
+- [Strategy 70](https://help.sap.com/docs/SAP_S4HANA_CLOUD/2bba750d1e124e1ea2a039bb1cd9b6c5/4223bf53d25ab64ce10000000a174cb4.html)
+
+These checks validate the bounded teaching example, not Canon's actual SAP configuration or interfaces.
+
+---
+
 # V5 product checks and reference-design choices
 
 V5 adds useful coverage, but some statements need qualification before appearing in a process reference:

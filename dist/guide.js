@@ -12,7 +12,7 @@
     { tab: 'journey', target: '.flow-node.active', title: 'Read the application flow', body: 'Each horizontal lane represents an application or S/4 component. Follow the flow from left to right. Click a step or a lane name for its role, inputs and hand-offs. Zoom or Expand makes the diagram easier to inspect.' },
     { tab: 'journey', target: '.overlay-controls', underlay: true, title: 'Compare two flows in the diagram', body: 'Enable Comparison underlay and choose a second model. Its different steps appear faded in the same application lanes. Adjust Visibility, Swap models, or Read differences to examine where the routes diverge.' },
     { tab: 'journey', target: '#ledger', mobileTarget: '#ledger .ledger-box', order: true, title: 'Separate demand from physical stock', body: 'These figures follow the selected process step. Compare IBP demand, S/4 requirements and physical fulfilment. A forecast, a customer confirmation and stock are different things: confirming an order does not physically issue its modules or ship a printer.' },
-    { tab: 'demand', target: '.lab-events', title: 'Test how orders consume forecast', body: 'Follow Before order, Order in S/4, Integrated & calculated and Order cancelled. Adjust the forecast and order, or use the preset cases. The results show when known demand replaces part of the forecast, and when it cannot consume it.' },
+    { tab: 'demand', target: '.lab-events', title: 'Test how orders consume forecast', body: 'Follow Before order, Order in S/4, Integrated & calculated and Order cancelled. Adjust the forecast and order, or use the preset cases. IBP and S/4 matching are separate. In the module panel, choose whether production requirements exist before reading module PIR consumption.' },
     { tab: 'ibp', target: '.ibp-flow-grid', mobileTarget: '.ibp-flow-card', title: 'Review the planning decisions', body: 'IBP planning shows how expected printer volume, module mix and stock policy connect to supply planning and execution feedback. Click a planning card for more detail. Below, change the mix or buffer to compare module prebuild targets.' },
     { tab: 'compare', target: '.compare-table thead', title: 'Compare the fulfilment options', body: 'Read across the table to compare stock points, production triggers, planning responsibilities and customer confirmation. Open a journey from the table, or use a scenario as a diagram underlay. The VC / AVC section compares the configuration layer separately.' },
     { tab: 'reference', target: '.reference-top', title: 'Find terms and application responsibilities', body: 'Search for a term or responsibility, then open a card for its inputs, outputs and hand-offs. The glossary explains planning objects. Official SAP documentation is linked further down for checking capabilities in the relevant edition and release.' },
@@ -54,7 +54,7 @@
     stop();
     remember('started');
     Object.assign(state, { scenario: 'ato', assemblyScope: 'full', supply: 's4', attach: 40, buffer: 0, overlay: false, underlay: 'cto', underlayOpacity: 42, engine: 'AVC', qty: 3, heads: 7, index: 0 });
-    Object.assign(lab, { forecast: 10, order: 3, mode: 'ts', match: true, event: 'synced', attach: 40, heads: 7 });
+    Object.assign(lab, { forecast: 10, order: 3, mode: 'ts', match: true, s4Match: true, event: 'synced', attach: 40, heads: 7, moduleStage: 'selection' });
     syncLabControls();
     document.querySelector('#reference-search').value = '';
     document.querySelector('#follow-step').checked = false;

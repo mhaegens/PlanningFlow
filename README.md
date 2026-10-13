@@ -76,6 +76,6 @@ The explorer offers a short customer guide on the first visit after login. Use *
 
 The explorer files remain editable in `dist/`. Commit/push changes, then redeploy in Coolify. Keep `server.mjs` and `public/` alongside `dist/`; these enforce access and provide the login page. `.env` files are excluded from Git and the Docker build.
 
-The explorer content remains based on published source commit `36031c6ea0b8d7770e0f2e9e82d27e5603f13b24`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
+The explorer content remains based on published source commit `355b0a673b4d1f5097106e265494b6d441e8065d`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
 
 See `CHANGES.md`, `CONTENT-REVIEW.md`, `SECURITY.md` and `VERIFICATION.md` for the process-model and access-control details.

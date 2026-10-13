@@ -1,83 +1,77 @@
 # Canon Production Printing — Process Explorer
 
-Standalone Coolify deployment package, updated on 13 October 2026 using the v5 complete process reference, retaining the IBP expert feedback.
-All HTML, CSS, JavaScript, fonts, logos, and icons are included in `dist/`.
-There is no build step, backend, database, API key, or required environment variable.
-The process simulator runs in the browser and has no live SAP connection.
+The v5 explorer now includes a server-side password gate for Coolify. The login page has a blurred, synthetic page image behind it. The real HTML, scripts, diagrams and other explorer files are served only after authentication.
 
 ## Deploy on Coolify
 
-1. Unzip this package. Put the contents of `canon-production-process-explorer-coolify/` at the root of a Git repository that your Coolify instance can access, and commit/push them. Include the `dist` directory.
-2. In Coolify, add an application using that **Git repository**.
-3. Select the **Dockerfile** build pack / build strategy and use the following settings.
-4. Set the domain you want to use, then select **Deploy**.
+Use the existing Git repository with the **Dockerfile** build pack. Set **APP_PASSWORD** to your chosen shared password as a **runtime environment variable / secret**, then deploy. Do not put the password in Git, build arguments or frontend variables.
 
 | Setting | Value |
 | --- | --- |
-| Build pack / build strategy | Dockerfile |
+| Build pack | Dockerfile |
 | Base Directory | `/` |
 | Dockerfile Location | `/Dockerfile` |
 | Ports Exposes | `80` |
+| Domain | Your HTTPS hostname |
+| Required runtime environment variable | `APP_PASSWORD` |
 | Host port mapping | Leave empty; use the Coolify proxy |
-| Environment variables | None |
 | Persistent storage | None |
-| Install / build / start command overrides | None; the Dockerfile supplies the server command |
-| Health check | Included in the Dockerfile: HTTP `GET /healthz` on internal port `80` |
+| Install / build / start overrides | None |
+| Health check | HTTP `GET /healthz` on internal port `80` |
 
-If this folder is inside a larger repository, set Base Directory to its path in that repository instead. Keep the Dockerfile and `dist/` together in that directory.
+The Dockerfile uses Node.js 24 and sets production mode, port 80 and one trusted proxy hop. The Coolify proxy terminates HTTPS. The server requires HTTPS for production requests, except the health check. A missing or empty password prevents startup, so the explorer is never exposed as a fallback.
 
-Use a Git-based application for this package. Coolify's **Dockerfile without Git** option has no source-file build context and cannot use this Dockerfile's `COPY` instructions by itself.
+**Do not use the Static build pack or serve `dist/` directly.** The Node server must handle every request for the password gate to protect the files. The previous Nginx-only configuration has been removed.
 
-Deploy at the root of a hostname. For example, the app's sections will be available at `/#journey`, `/#demand`, `/#ibp`, `/#compare`, and `/#reference`. HTTPS certificates and domain routing are handled by the Coolify proxy; the container itself serves HTTP on port 80.
+Changing `APP_PASSWORD` and restarting / redeploying logs out existing sessions. No separate session secret is required. Sessions are stored in memory for this single-instance application; restarting also clears them. Keep one replica for this simple deployment.
 
-### Access
+## Access behaviour
 
-This standalone package has no application login. The access restriction on the original ChatGPT-hosted site does not transfer with the files. To keep the Coolify copy private, configure access protection in Coolify or your reverse proxy before exposing its domain.
+- Public: login page, Canon logo, gate fonts/CSS/script, the blurred synthetic preview, and `/healthz`.
+- Protected: all explorer HTML, JavaScript, diagrams, reference content, JSON, fonts and assets in `dist/`.
+- Passwords are checked on the server using scrypt and a timing-safe comparison. They are never sent to the frontend as configuration or written to request logs.
+- Sessions use random opaque tokens in HttpOnly, Secure, SameSite=Strict host-bound cookies in production.
+- Sessions expire after one hour idle or eight hours total. Sign out revokes the server session.
+- Login allows five attempts per client address in fifteen minutes. The Coolify proxy's appended client address is used, rather than a user-supplied leftmost forwarding value.
+- Forms have origin and CSRF checks. Protected responses are not cached.
 
-### Alternative: Coolify Static build pack
+This shared password does not create individual accounts. The explorer remains a browser simulation without a live SAP connection. The separately hosted ChatGPT Sites preview retains its platform access controls; this password server is for the Coolify deployment.
 
-The site was already compatible with static hosting. You can instead select **Static**, set **Base Directory** to `/dist`, and use Coolify's default Nginx server on port `80`. No build command is needed. For that option, use `/` as the health-check path; `/healthz` is provided only by the included Dockerfile's Nginx configuration.
+## Verify deployment
 
-## Check the deployment
+1. Open the HTTPS hostname in a private browser window. The blurred login gate should appear.
+2. Request `/content.js` directly before signing in. It should return HTTP 401 without the script content.
+3. Enter the password. Check Order process, Demand lab, IBP planning, Compare and Reference.
+4. Sign out. Request `/content.js` again; it should return HTTP 401.
+5. `/healthz` should return `ok` with HTTP 200.
 
-- Open the home page and confirm both logos, fonts, and library icons load.
-- Switch between Order process, Demand lab, Compare, and Reference; refresh each section.
-- Change the fulfilment scenario and supply-planning design, advance the process, and open a step explanation.
-- The opening view is Assemble-to-Order. Change module mix and extra stock, and follow the module receipts, assembly order, component issue and finished-printer receipt.
-- In ATO, compare the PP/DS scopes: modules only versus modules plus final assembly. Check the changed promise basis.
-- Open the optional pMRP, PAL, ABC and BOP cards; they explain capability choices without advancing the order.
-- Compare delivery preparation with PGI: finished-printer stock falls only at PGI.
-- Open Compare for the coverage matrix and direct links to all eight VC/AVC diagrams.
-- Enable Comparison underlay, select another scenario, inspect its faded nodes and use Swap models.
-- Open IBP planning for the volume/mix/buffer flow and supply-handover choices.
-- In MTO, check the SBC request → PP/DS simulation → confirmation sequence.
-- In MTS/CTO, compare the IBP planned-order handover with the S/4-led PIR/MRP route.
-- For the Dockerfile deployment, open `/healthz`; it should return `ok` with HTTP 200.
+## Local development
 
-## Run locally with Docker
+Use Node.js 24. No dependencies or install step are needed.
 
-From this directory:
+```sh
+APP_PASSWORD='local-test-only' NODE_ENV=development ALLOW_INSECURE_HTTP=1 PORT=8080 HOST=127.0.0.1 node server.mjs
+```
+
+Open `http://127.0.0.1:8080`. The insecure-cookie option is for local development only and is rejected in production.
+
+Run authentication tests:
+
+```sh
+node --test tests/auth.test.mjs
+```
+
+For Docker, create a private `.env` file from `.env.example`, fill in `APP_PASSWORD`, and supply it as runtime configuration. Local HTTP example:
 
 ```sh
 docker build -t canon-process-explorer .
-docker run --rm --name canon-process-explorer -p 127.0.0.1:8080:80 canon-process-explorer
+docker run --rm --env-file .env -e NODE_ENV=development -e ALLOW_INSECURE_HTTP=1 -p 127.0.0.1:8080:80 canon-process-explorer
 ```
 
-Open `http://localhost:8080`. In another terminal, check:
+## Update content
 
-```sh
-curl --fail http://localhost:8080/healthz
-docker inspect --format '{{.State.Health.Status}}' canon-process-explorer
-```
+The explorer files remain editable in `dist/`. Commit/push changes, then redeploy in Coolify. Keep `server.mjs` and `public/` alongside `dist/`; these enforce access and provide the login page. `.env` files are excluded from Git and the Docker build.
 
-## Update the content
+The explorer content remains based on published source commit `54cfae67607e2aef2d76c08aaa38ed6ffe2bd83f`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
 
-Edit the files in `dist/`, commit/push, and redeploy in Coolify. These are the editable source files; no compilation is required. The server asks browsers to revalidate cached files so updates use the current CSS, JavaScript, and logo assets.
-
-The package preserves the application files from source commit `54cfae67607e2aef2d76c08aaa38ed6ffe2bd83f`. It excludes ChatGPT hosting metadata, source-repository credentials, and local QA files.
-
-## Documentation
-
-- [Coolify: Dockerfile deployments](https://coolify.io/docs/applications/builds/dockerfile)
-- [Coolify: Static deployments](https://coolify.io/docs/applications/builds/static)
-- [Coolify: Health checks](https://coolify.io/docs/applications/configuration/health-checks)
+See `CHANGES.md`, `CONTENT-REVIEW.md`, `SECURITY.md` and `VERIFICATION.md` for the process-model and access-control details.

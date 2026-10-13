@@ -1,5 +1,7 @@
 *
 !Dockerfile
-!nginx.conf
+!server.mjs
+!public/
+!public/**
 !dist/
 !dist/**

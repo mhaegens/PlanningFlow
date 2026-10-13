@@ -1,3 +1,15 @@
+# Password-gate verification — 13 October 2026
+
+- Eight automated server tests pass: required password / fail-closed startup; anonymous file denial; CSRF/origin checks and safe errors; login/session creation and redirect validation; logout revocation; idle/absolute expiry; attempt limits; production HTTPS and Secure host-bound cookies.
+- Browser checks pass: real app absent before login; incorrect-password feedback; Show password; returning to the requested section; HttpOnly session; authenticated diagram popups and underlays; sign-out; direct file denial; browser-history return to the gate.
+- Login and authenticated layouts checked at 390, 768 and 1440 pixels with no page overflow or browser script errors.
+- Public preview PNG was created from a synthetic layout without private diagram or order data. Real explorer files are served only after server authorization.
+- The five v5 browser application scripts remain unchanged. Server and gate scripts pass syntax checks.
+- Docker is unavailable locally, so the revised container build and Coolify rollout have not been executed here. The server itself was tested using Node.js 24.
+- Activation requires setting `APP_PASSWORD` as a Coolify runtime secret and deploying with the Dockerfile build pack.
+
+---
+
 # Verification — v5, 13 October 2026
 
 - All 13 application files match published source commit `54cfae67607e2aef2d76c08aaa38ed6ffe2bd83f` byte for byte, including completeness.js.

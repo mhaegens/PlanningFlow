@@ -1,3 +1,13 @@
+# Password-gate update — 13 October 2026
+
+- Replaced Nginx-only static serving with a small Node.js server. `APP_PASSWORD` is required as a runtime variable in Coolify; missing configuration fails closed.
+- Added a Canon-branded login card over a public, pre-blurred synthetic layout image. The real explorer is not loaded underneath the gate.
+- Protected all explorer HTML, scripts and assets with expiring server-side sessions. Added sign-out, CSRF/origin checks, attempt limiting, secure cookies and no-store responses.
+- Preserved the v5 explorer content, diagrams, interactions and all existing models. The server inserts the sign-out control at render time.
+- Removed the Static build-pack alternative. The Dockerfile server is now required for password enforcement.
+
+---
+
 # V5 completeness update — 13 October 2026
 
 The supplied v5 complete reference is incorporated into the existing explorer. ATO remains the opening Canon reference; prior IBP, mix/buffer, supply-ownership and underlay functions remain available.

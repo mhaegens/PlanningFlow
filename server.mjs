@@ -147,7 +147,7 @@ export async function createExplorerServer({ env = process.env, now = Date.now }
     if (url.pathname === '/healthz' && ['GET', 'HEAD'].includes(req.method)) { send(req, res, 200, 'ok\n'); return; }
     const host = trustedHost(req);
     if (!host) { send(req, res, 400, 'Invalid host.'); return; }
-    const https = req.socket.encrypted || (trustProxy && req.headers['x-forwarded-proto'] === 'https');
+    const https = req.socket.encrypted || (trustProxy && (req.headers['x-forwarded-proto'] === 'https' || String(req.headers['cf-visitor'] || '').includes('"https"')));
     if (secure && !https) {
       if (['GET', 'HEAD'].includes(req.method)) { headers(res); res.writeHead(308, { Location: 'https://' + host + url.pathname + url.search }); res.end(); }
       else send(req, res, 403, 'HTTPS is required.');

@@ -1,3 +1,13 @@
+# Reader-facing copy cleanup — 13 October 2026
+
+- Removed internal briefing versions, source-document mentions and preparation-session provenance from the explorer, its popups and expandable notes.
+- Rewrote the CTP / SBC, module-mix, IBP and example-scope explanations so they stand on their own.
+- Removed an unrelated Transportation Management research aside and its link from the reader-facing reference list.
+- Kept the applicable official SAP links and the process-model assumptions readers need.
+- Audited all five pages, explanation and application-role popups, glossary terms, diagram-node text and scenario-specific steps: 2,756 entries, with no internal-briefing references found.
+
+---
+
 # Password-gate update — 13 October 2026
 
 - Replaced Nginx-only static serving with a small Node.js server. `APP_PASSWORD` is required as a runtime variable in Coolify; missing configuration fails closed.

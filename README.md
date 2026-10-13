@@ -1,6 +1,6 @@
 # Canon Production Printing — Process Explorer
 
-The v5 explorer now includes a server-side password gate for Coolify. The login page has a blurred, synthetic page image behind it. The real HTML, scripts, diagrams and other explorer files are served only after authentication.
+The explorer includes a server-side password gate for Coolify. The login page has a blurred, synthetic page image behind it. The real HTML, scripts, diagrams and other explorer files are served only after authentication.
 
 ## Deploy on Coolify
 
@@ -72,6 +72,6 @@ docker run --rm --env-file .env -e NODE_ENV=development -e ALLOW_INSECURE_HTTP=1
 
 The explorer files remain editable in `dist/`. Commit/push changes, then redeploy in Coolify. Keep `server.mjs` and `public/` alongside `dist/`; these enforce access and provide the login page. `.env` files are excluded from Git and the Docker build.
 
-The explorer content remains based on published source commit `54cfae67607e2aef2d76c08aaa38ed6ffe2bd83f`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
+The explorer content remains based on published source commit `5ced26c62bd333c7649370d9152bf4d055a83a21`. No real password, hosting credential, Git metadata or local QA material is included in deployment ZIPs.
 
 See `CHANGES.md`, `CONTENT-REVIEW.md`, `SECURITY.md` and `VERIFICATION.md` for the process-model and access-control details.
